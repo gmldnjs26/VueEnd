@@ -1,49 +1,67 @@
 <template>
-  <form @submit.prevent="submitForm">
-    <div>
-      <label for="username">id: </label>
-      <input id="username" type="text" v-model="username" />
+  <div class="contents">
+    <div class="form-wrapper form-wrapper-sm">
+      <form @submit.prevent="submitForm" class="form">
+        <div>
+          <label for="username">id:</label>
+          <input id="username" type="text" v-model="username" />
+          <p class="validation-text">
+            <span class="warning" v-if="!isUsernameValid && username">
+              Please enter an email address
+            </span>
+          </p>
+        </div>
+        <div>
+          <label for="password">pw:</label>
+          <input id="password" type="text" v-model="password" />
+        </div>
+        <button
+          :disabled="!isUsernameValid || !password"
+          type="submit"
+          class="btn"
+        >
+          로그인
+        </button>
+      </form>
+      <p class="log">{{ logMessage }}</p>
     </div>
-    <div>
-      <label for="password">password: </label>
-      <input id="password" type="text" v-model="password" />
-    </div>
-    <button v-bind:disabled="!isUsernameValid || !password" type="submit">
-      로그인
-    </button>
-    <p>{{ logMessage }}</p>
-  </form>
+  </div>
 </template>
 
 <script>
-import { loginUser } from '@/api/index.js';
-import { validateEmail } from '@/utils/validation.js';
+import { loginUser } from '@/api/index';
+import { validateEmail } from '@/utils/validation';
+
 export default {
   data() {
     return {
+      // form values
       username: '',
       password: '',
+      // log
       logMessage: '',
     };
   },
   computed: {
     isUsernameValid() {
       return validateEmail(this.username);
-      //username이 한글자 한글자 바뀔때마다 실행
     },
   },
   methods: {
     async submitForm() {
       try {
         // 비즈니스 로직
-        const userdata = {
+        const userData = {
           username: this.username,
           password: this.password,
         };
-        const { data } = await loginUser(userdata);
-        this.logMessage = data.message;
+        const { data } = await loginUser(userData);
+        console.log(data.user.username);
+        this.$router.push('/main');
+        this.$state.commit('setUsername', data.user.username);
       } catch (error) {
-        // 에러 핸들링헐 코드
+        // 에러 핸들링할 코드
+        console.log(error.response.data);
         this.logMessage = error.response.data;
       } finally {
         this.initForm();
@@ -57,4 +75,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.btn {
+  color: white;
+}
+</style>
